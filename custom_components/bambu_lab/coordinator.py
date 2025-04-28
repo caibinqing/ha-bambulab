@@ -305,7 +305,7 @@ class BambuDataUpdateCoordinator(DataUpdateCoordinator):
         # identifiers is a set of tuples. We only have one tuple in the set - DOMAIN + serial.
         ams_serial = next(iter(ams_device.identifiers))[1]
         ams_index = None
-        for index in range(0,4):
+        for index in range(0,len(self.get_model().ams.data)):
             ams = self.get_model().ams.data[index]
             if ams is not None:
                 if ams.serial == ams_serial:
