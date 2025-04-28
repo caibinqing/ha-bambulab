@@ -1525,6 +1525,7 @@ class PrintJob:
             self.end_time = None
         else:
             LOGGER.debug("Updating bambu cloud task data found for printer.")
+            LOGGER.debug("TASK DATA: %s", self._task_data)
             url = self._task_data.get('cover', '')
             if url != "":
                 data = self._client.bambu_cloud.download(url)
@@ -1536,10 +1537,17 @@ class PrintJob:
             ams_print_data = self._task_data.get('amsDetailMapping', [])
             if self.print_weight != 0:
                 for ams_data in ams_print_data:
-                    index = ams_data['ams']
+                    index = math.log2(ams_data['ams'])
+                    if index.is_integer():
+                        index = int(index)
+                    else:
+                        index = ams_data['ams']
                     weight = ams_data['weight']
-                    self._ams_print_weights[index] = weight
-                    self._ams_print_lengths[index] = self.print_length * weight / self.print_weight
+                    try:
+                        self._ams_print_weights[index] = weight
+                        self._ams_print_lengths[index] = self.print_length * weight / self.print_weight
+                    except IndexError:
+                        LOGGER.error("IndexError: AMS index %s out of range", index)
 
             status = self._task_data['status']
             LOGGER.debug(f"CLOUD PRINT STATUS: {status}")
@@ -1856,7 +1864,7 @@ class AMSList:
     def __init__(self, client):
         self._client = client
         self.tray_now = 0
-        self.data = [None] * 4
+        self.data = [None] * 12
         self._first_initialization_done = False
 
     def info_update(self, data):
@@ -1902,8 +1910,13 @@ class AMSList:
             elif name.startswith("n3f/"):
                 model = "AMS 2 Pro"
                 index = int(name[4])
-            
+            elif name.startswith("n3s/"):
+                model = "AMS HT"
+                index = int(name[4])
+
             if index != -1:
+                if index >= 128:
+                    index -= 123
                 # Sometimes we get incomplete version data. We have to skip if that occurs since the serial number is
                 # required as part of the home assistant device identity.
                 if not module['sn'] == '':
@@ -2000,6 +2013,8 @@ class AMSList:
             ams_list = ams_data.get("ams", [])
             for ams in ams_list:
                 index = int(ams['id'])
+                if index >= 128:
+                    index -= 123
                 # May get data before info so create entry if necessary
                 if self.data[index] is None:
                     self.data[index] = AMSInstance(self._client, "Unknown")
