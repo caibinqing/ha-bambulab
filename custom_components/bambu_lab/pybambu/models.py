@@ -1410,6 +1410,7 @@ class PrintJob:
             self.end_time = None
         else:
             LOGGER.debug("Updating bambu cloud task data found for printer.")
+            LOGGER.debug("TASK DATA: %s", self._task_data)
             url = self._task_data.get('cover', '')
             if url != "":
                 data = self._client.bambu_cloud.download(url)
@@ -1423,8 +1424,11 @@ class PrintJob:
                 for ams_data in ams_print_data:
                     index = ams_data['ams']
                     weight = ams_data['weight']
-                    self._ams_print_weights[index] = weight
-                    self._ams_print_lengths[index] = self.print_length * weight / self.print_weight
+                    try:
+                        self._ams_print_weights[index] = weight
+                        self._ams_print_lengths[index] = self.print_length * weight / self.print_weight
+                    except IndexError:
+                        LOGGER.error("IndexError: AMS index %s out of range", index)
 
             status = self._task_data['status']
             LOGGER.debug(f"CLOUD PRINT STATUS: {status}")
