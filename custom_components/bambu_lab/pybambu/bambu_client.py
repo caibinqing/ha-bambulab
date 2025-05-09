@@ -683,7 +683,7 @@ class BambuClient:
                 self._device.info_update(data=json_data.get("info"))
                 self.received_info = True
             if (json_data.get('print', {}).get('command', '') == 'push_status') and (json_data.get('print', {}).get('msg', 0) == 0):
-                self._device.print_update(data=json_data.get("print"))
+                self._device.print_update(data=json_data.get("print", {}))
                 self.received_push = True
 
             if self.received_info and self.received_push:
