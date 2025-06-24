@@ -495,7 +495,7 @@ class Temperature:
                         if "temp" in entry:
                             self.nozzle_temps[entry["id"]] = entry["temp"] & 0xFFFF
                             self.target_nozzle_temps[entry["id"]] = (entry["temp"] >> 16) & 0xFFFF
-                state = data["device"]["extruder"]["state"]
+                state = data["device"]["extruder"].get("state", 0)
                 self.active_nozzle = (state >> 4) & 0xF
         else:
             # New firmware put the nozzle data in a different location. Low word is current value. High word is the target.
@@ -2086,7 +2086,7 @@ class AMSList:
                             tray_now = entry["snow"]
                             self._nozzle_tray_index[entry["id"]] = tray_now & 0x3
                             self._nozzle_ams_index[entry["id"]] = tray_now >> 8
-                            state = data["device"]["extruder"]["state"]
+                            state = data["device"]["extruder"].get("state", 0)
                             self._active_nozzle = (state >> 4) & 0xF
             self._active_ams_index = self._nozzle_ams_index[self._active_nozzle]
             self._active_tray_index = self._nozzle_tray_index[self._active_nozzle]
